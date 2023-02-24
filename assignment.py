@@ -1,33 +1,20 @@
 import glm
 import random
 import numpy as np
-
+import cv2 as cv2
 block_size = 1.0
 
-def construct_tree(width, height, depth):
+def construct_table(width, height, depth):
     table = []
     for x in range(width):
         for y in range(height):
             for z in range(depth):
-                project_1 = (1, 2)
-                project_2 = (4, 2)
-                project_3 = (6, 4)
-                project_4 = (2, 9)
+                project_1 = (320, 420)
+                project_2 = (122, 44)
+                project_3 = (12, 7)
+                project_4 = (12, 12)
                 table.append([(x, y, z), project_1, project_2, project_3, project_4])
-    # print(len(table))
-    # print(len(table[0]))
-    # print(table[0])
     return table
-
-
-table = construct_tree(10, 10, 10)
-active_voxels = []
-active_voxels.append([80, 0, 8])
-active_voxels.append([25, 0, 60])
-
-for i, elem in enumerate(table):  # For every voxel
-    if (i < 10):
-        print(table[i])
 
 
 def generate_grid(width, depth):
@@ -74,3 +61,31 @@ def get_cam_rotation_matrices():
         cam_rotations[c] = glm.rotate(cam_rotations[c], cam_angles[c][1] * np.pi / 180, [0, 1, 0])
         cam_rotations[c] = glm.rotate(cam_rotations[c], cam_angles[c][2] * np.pi / 180, [0, 0, 1])
     return cam_rotations
+
+
+# Load the static first frame of each bg-subtracted video
+cframe_c1 = cv2.imread('subtracted/cam_1/subtr_frame_0.jpg', cv2.IMREAD_GRAYSCALE)
+cframe_c2 = cv2.imread('subtracted/cam_2/subtr_frame_0.jpg', cv2.IMREAD_GRAYSCALE)
+cframe_c3 = cv2.imread('subtracted/cam_3/subtr_frame_0.jpg', cv2.IMREAD_GRAYSCALE)
+cframe_c4 = cv2.imread('subtracted/cam_4/subtr_frame_0.jpg', cv2.IMREAD_GRAYSCALE)
+
+# Check if in foreground for each of the four views (cameras)
+def is_in_foreground(table_element, frame_num):
+    pos = table_element[0]
+    c_1 = table_element[1]
+    c_2 = table_element[2]
+    c_3 = table_element[3]
+    c_4 = table_element[4]
+
+    print(cframe_c1[c_1])
+    print(cframe_c2[c_2])
+    print(cframe_c3[c_3])
+    print(cframe_c4[c_4])
+
+table = construct_table(10, 10, 10)
+is_in_foreground(table[0], 0)
+
+
+# active_voxels = []
+# active_voxels.append([80, 0, 8])
+# active_voxels.append([25, 0, 60])
