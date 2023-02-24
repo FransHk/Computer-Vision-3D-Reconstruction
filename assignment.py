@@ -4,6 +4,31 @@ import numpy as np
 
 block_size = 1.0
 
+def construct_tree(width, height, depth):
+    table = []
+    for x in range(width):
+        for y in range(height):
+            for z in range(depth):
+                project_1 = (1, 2)
+                project_2 = (4, 2)
+                project_3 = (6, 4)
+                project_4 = (2, 9)
+                table.append([(x, y, z), project_1, project_2, project_3, project_4])
+    # print(len(table))
+    # print(len(table[0]))
+    # print(table[0])
+    return table
+
+
+table = construct_tree(10, 10, 10)
+active_voxels = []
+active_voxels.append([80, 0, 8])
+active_voxels.append([25, 0, 60])
+
+for i, elem in enumerate(table):  # For every voxel
+    if (i < 10):
+        print(table[i])
+
 
 def generate_grid(width, depth):
     # Generates the floor grid locations
@@ -19,11 +44,14 @@ def set_voxel_positions(width, height, depth):
     # Generates random voxel locations
     # TODO: You need to calculate proper voxel arrays instead of random ones.
     data = []
-    for x in range(width):
-        for y in range(height):
-            for z in range(depth):
-                if random.randint(0, 1000) < 5:
-                    data.append([x*block_size - width/2, y*block_size, z*block_size - depth/2])
+    for elem in active_voxels:
+        data.append([elem[0] * block_size - width / 2, elem[1] * block_size, elem[2] * block_size - depth / 2])
+    # for x in range(width):
+    #     for y in range(height):
+    #         for z in range(depth):
+    #             if random.randint(0, 1000) < 5:
+    #                 data.append([x*block_size - width/2, y*block_size, z*block_size - depth/2])
+
     return data
 
 
