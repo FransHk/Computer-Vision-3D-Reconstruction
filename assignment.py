@@ -6,14 +6,11 @@ block_size = 1.0
 
 def construct_table(width, height, depth):
     table = []
-    for x in range(width):
-        for y in range(height):
-            for z in range(depth):
-                project_1 = (320, 420)
-                project_2 = (122, 44)
-                project_3 = (12, 7)
-                project_4 = (12, 12)
-                table.append([(x, y, z), project_1, project_2, project_3, project_4])
+    for x in range(-500, 500):
+        for y in range(-500, 500):
+            for z in range(0, 1000):
+                voxel_coords = np.float32([x,y,z])
+                imgpts, jac = cv2.projectPoints(voxel_coords, )
     return table
 
 
@@ -45,17 +42,19 @@ def set_voxel_positions(width, height, depth):
 def get_cam_positions():
     # Generates dummy camera locations at the 4 corners of the room
     # TODO: You need to input the estimated locations of the 4 cameras in the world coordinates.
-    return [[-64 * block_size, 64 * block_size, 63 * block_size],
-            [63 * block_size, 64 * block_size, 63 * block_size],
-            [63 * block_size, 64 * block_size, -64 * block_size],
-            [-64 * block_size, 64 * block_size, -64 * block_size]]
+    return np.array([[1623.83659476, 4237.98356062,-959.21232013],
+                    [293.30441534, 3087.06657458,-538.96930661]])/50
 
 
 def get_cam_rotation_matrices():
     # Generates dummy camera rotation matrices, looking down 45 degrees towards the center of the room
     # TODO: You need to input the estimated camera rotation matrices (4x4) of the 4 cameras in the world coordinates.
     cam_angles = [[0, 45, -45], [0, 135, -45], [0, 225, -45], [0, 315, -45]]
+    rot_1 = glm.mat4(1) # TODO ADD CAM ROTATIONS HERE
     cam_rotations = [glm.mat4(1), glm.mat4(1), glm.mat4(1), glm.mat4(1)]
+
+
+
     for c in range(len(cam_rotations)):
         cam_rotations[c] = glm.rotate(cam_rotations[c], cam_angles[c][0] * np.pi / 180, [1, 0, 0])
         cam_rotations[c] = glm.rotate(cam_rotations[c], cam_angles[c][1] * np.pi / 180, [0, 1, 0])
@@ -84,7 +83,6 @@ def is_in_foreground(table_element, frame_num):
 
 table = construct_table(10, 10, 10)
 is_in_foreground(table[0], 0)
-
 
 # active_voxels = []
 # active_voxels.append([80, 0, 8])
