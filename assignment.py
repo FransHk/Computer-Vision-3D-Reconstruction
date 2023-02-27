@@ -1,18 +1,39 @@
 import glm
-import random
 import numpy as np
 import cv2 as cv2
 block_size = 1.0
+active_voxels = []
 
-def construct_table(width, height, depth):
-    table = []
-    for x in range(-500, 500):
-        for y in range(-500, 500):
-            for z in range(0, 1000):
-                voxel_coords = np.float32([x,y,z])
-                imgpts, jac = cv2.projectPoints(voxel_coords, )
-    return table
+class CamData:
+    mtx = None
+    dist = None
+    rvec = None
+    tvec = None
+    rotMat = None
+    pos = None
 
+
+
+def LoadData():
+    cam_1 = CamData()
+    cam_2 = CamData()
+    # Load previously saved camera data
+    with np.load('calibrations/intrinsic_cam1.npz') as X:
+        cam_1.mtx, cam_1.dist = [X[i] for i in ('mtx','dist')]
+    with np.load('calibrations/extrinsic_cam1.npz') as X:
+        cam_1.pos, cam_1.rvec, cam_1.tvec, cam_1.rotMat = [X[i] for i in ('pos', 'rvec', 'tvec', 'rotMat')]
+
+    with np.load('calibrations/intrinsic_cam2.npz') as X:
+        cam_2.mtx, cam_2.dist = [X[i] for i in ('mtx','dist')]
+    with np.load('calibrations/extrinsic_cam2.npz') as X:
+        cam_2.pos, cam_2.rvec, cam_2.tvec, cam_2.rotMat = [X[i] for i in ('pos', 'rvec', 'tvec', 'rotMat')]
+    print(cam_1.pos)
+    print(cam_2.pos)
+    return cam_1, cam_2
+
+
+
+a, b = LoadData()
 
 def generate_grid(width, depth):
     # Generates the floor grid locations
@@ -25,6 +46,7 @@ def generate_grid(width, depth):
 
 
 def set_voxel_positions(width, height, depth):
+    print(len(active_voxels))
     # Generates random voxel locations
     # TODO: You need to calculate proper voxel arrays instead of random ones.
     data = []
@@ -42,8 +64,8 @@ def set_voxel_positions(width, height, depth):
 def get_cam_positions():
     # Generates dummy camera locations at the 4 corners of the room
     # TODO: You need to input the estimated locations of the 4 cameras in the world coordinates.
-    return np.array([[1623.83659476, 4237.98356062,-959.21232013],
-                    [293.30441534, 3087.06657458,-538.96930661]])/50
+    return np.array([[1479.83871125, 3780.60917984, -829.51554058],
+                    [302.73434419, 3159.49229733,-590.67064462]])
 
 
 def get_cam_rotation_matrices():
@@ -68,22 +90,41 @@ cframe_c2 = cv2.imread('subtracted/cam_2/subtr_frame_0.jpg', cv2.IMREAD_GRAYSCAL
 cframe_c3 = cv2.imread('subtracted/cam_3/subtr_frame_0.jpg', cv2.IMREAD_GRAYSCALE)
 cframe_c4 = cv2.imread('subtracted/cam_4/subtr_frame_0.jpg', cv2.IMREAD_GRAYSCALE)
 
-# Check if in foreground for each of the four views (cameras)
 def is_in_foreground(table_element, frame_num):
+    #print(table_element)
     pos = table_element[0]
-    c_1 = table_element[1]
-    c_2 = table_element[2]
-    c_3 = table_element[3]
-    c_4 = table_element[4]
+    c_1 = table_element[1].astype('int')
+    c_2 = table_element[2].astype('int')
 
-    print(cframe_c1[c_1])
-    print(cframe_c2[c_2])
-    print(cframe_c3[c_3])
-    print(cframe_c4[c_4])
+    val_c1 = cframe_c1[c_1[0], c_1[1]]
+    val_c2 = cframe_c1[c_2[0], c_2[1]]
+    if val_c2 != 0 and val_c1 != 0:
+        return True
+    else:
+        return False
 
-table = construct_table(10, 10, 10)
-is_in_foreground(table[0], 0)
+def construct_table():
+    global active_voxels
+    global a, b
+    w = 128
+    h = 64
+    d = 128
+    table = []
+    for x in range(-10, 200, 5):
+        for y in range(0, 100, 5):
+            for z in range(-10, 200, 5):
+                #active_voxels.append(np.float32([x,y,z]))
+                voxel_coords = np.float32([x,y,z])
+                imgpts_a, jac = cv2.projectPoints(voxel_coords, a.rvec, a.tvec, a.mtx, a.dist)
+                imgpts_b, jac = cv2.projectPoints(voxel_coords, b.rvec, b.tvec, b.mtx, b.dist)
+                table.append([(x, y, z), imgpts_a.ravel(), imgpts_b.ravel()])
 
+    print("Constructed table!")
+    return table
+
+table = construct_table()
 # active_voxels = []
-# active_voxels.append([80, 0, 8])
-# active_voxels.append([25, 0, 60])
+#
+for elem in table:
+    if(is_in_foreground(elem, 0)):
+        active_voxels.append(elem[0])
