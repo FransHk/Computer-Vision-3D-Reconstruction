@@ -119,44 +119,32 @@ cv2.waitKey()
 # cframe_c3 = cv2.imread('subtracted/cam_3/subtr_frame_0.jpg', cv2.IMREAD_GRAYSCALE)
 # cframe_c4 = cv2.imread('subtracted/cam_4/subtr_frame_0.jpg', cv2.IMREAD_GRAYSCALE)
 
-count_true = 0
-count_false = 0
+
 def is_in_foreground(table_element):
-    pos = table_element[0]
+
     point_c1 = table_element[1].astype('int')
-    # c_2 = table_element[2].astype('int')
-    # c_3 = table_element[3].astype('int')
-    # c_4 = table_element[4].astype('int')
-
-    # Check pixel value of each camera coords
-
     val_c1 = cframe_c1[point_c1[1], point_c1[0]]
+    print(point_c1[1], point_c1[0])
+    print(val_c1)
     # val_c2 = cframe_c2[c_2[1], c_2[0]]
     # val_c3 = cframe_c3[c_3[1], c_3[0]]
     # val_c4 = cframe_c4[c_4[1], c_4[0]]
 
-    if val_c1 == 255:# and val_c2 ==0 and val_c3 == 0 and val_c4 == 0:
-        return True
-    else:
+    if val_c1 == 0:# and val_c2 ==0 and val_c3 == 0 and val_c4 == 0:
         return False
-
-
+    else:
+        return True
 
 def construct_table():
     global active_voxels
     global a, b
-
     table = []
-    for x in range(-64, 128 , 8):
-        for z in range(0, 128, 8):
-            for y in range(-64, 128, 8):
+    for x in range(0, 128, 12):
+        for y in range(0, 128, 12):
+            for z in range(0, 128, 12):
                 voxel_coords = np.float32([x,y,z])
-
                 imgpts_a, jac = cv2.projectPoints(voxel_coords, a.rvec, a.tvec, a.mtx, a.dist)
-                # imgpts_b, jac = cv2.projectPoints(voxel_coords, b.rvec, b.tvec, b.mtx, b.dist)
-                # imgpts_c, jac = cv2.projectPoints(voxel_coords, c.rvec, c.tvec, c.mtx, c.dist)
-                # imgpts_d, jac = cv2.projectPoints(voxel_coords, d.rvec, d.tvec, d.mtx, d.dist)
-                table.append([(x, y, z), imgpts_a[0].ravel()]) #, imgpts_b.ravel(), imgpts_c.ravel(), imgpts_d.ravel()])
+                table.append([(x, y, z), imgpts_a[0].ravel()])
     print("Constructed table")
     return table
 
