@@ -30,12 +30,14 @@ def LoadData():
     with np.load('calibrations/extrinsic_cam2.npz') as X:
         cam_2.pos, cam_2.rvec, cam_2.tvec, cam_2.rotMat = [X[i] for i in ('pos', 'rvec', 'tvec', 'rotMat')]
 
-    print(cam_1.pos)
-    print(cam_2.pos)
+
+
+
     rotMatList.append(cam_1.rotMat)
     rotMatList.append(cam_2.rotMat)
     rotMatList.append(cam_2.rotMat)
     rotMatList.append(cam_2.rotMat)
+
     tvecList.append(cam_1.tvec)
     tvecList.append(cam_2.tvec)
     tvecList.append(cam_2.tvec)
@@ -57,7 +59,7 @@ def generate_grid(width, depth):
 
 
 def set_voxel_positions(width, height, depth):
-    print(len(active_voxels))
+    print("Current active voxels: ", len(active_voxels))
     # Generates random voxel locations
     # TODO: You need to calculate proper voxel arrays instead of random ones.
     data = []
@@ -94,7 +96,7 @@ def get_cam_rotation_matrices():
             [rotmtx[2][0], rotmtx[2][1], rotmtx[2][2], 0],
             [0, 0, 0, 1]])
         rot_mat = glm.rotate(mat, glm.radians(90), (0, 1, 1))
-        cam_rotations.append(mat)
+        cam_rotations.append(rot_mat)
 
     cam_angles = tvecList
 
@@ -117,9 +119,9 @@ def is_in_foreground(table_element, frame_num):
     c_1 = table_element[1].astype('int')
     c_2 = table_element[2].astype('int')
 
-    # Check pixel value of each camera coord
-    val_c1 = cframe_c1[c_1[0], c_1[1]]
-    val_c2 = cframe_c1[c_2[0], c_2[1]]
+    # Check pixel value of each camera coords
+    val_c1 = cframe_c1[c_1[1], c_1[0]]
+    val_c2 =cframe_c1[c_2[1], c_2[0]]
     if val_c2 != 0 and val_c1 != 0:
         return True
     else:
@@ -130,9 +132,9 @@ def construct_table():
     global a, b
 
     table = []
-    for x in range(-10, 200, 5):
-        for y in range(0, 100, 5):
-            for z in range(-10, 200, 5):
+    for x in range(-1000, 1000, 10):
+        for y in range(0, 1000, 10):
+            for z in range(-1000, 1000, 10):
                 voxel_coords = np.float32([x,y,z])
                 imgpts_a, jac = cv2.projectPoints(voxel_coords, a.rvec, a.tvec, a.mtx, a.dist)
                 imgpts_b, jac = cv2.projectPoints(voxel_coords, b.rvec, b.tvec, b.mtx, b.dist)
@@ -142,8 +144,7 @@ def construct_table():
     return table
 
 table = construct_table()
-# active_voxels = []
-#
+
 for elem in table:
     if(is_in_foreground(elem, 0)):
         active_voxels.append(elem[0])
